@@ -1,0 +1,34 @@
+WHITESPACE = _{ " " | "\t" }
+
+number = { ASCII_DIGIT+ }
+list = { number ~ ("," ~ ( number | "" ))+ }
+
+identifier = {ASCII_ALPHA ~ (ASCII_ALPHA | ASCII_DIGIT)* }
+
+variable = {identifier ~ "=" ~ (list | number)}
+
+input = { ((list | variable) ~ (";" | "\n" | "\r\n")* )* }
+
+/*
+Test:
+list1 = 8987, 93480,
+number1 = 256;3490570, 234
+239420783, 23423840
+
+Result:
+- input
+  - variable
+    - identifier: "list1"
+    - list
+      - number: "8987"
+      - number: "93480"
+  - variable
+    - identifier: "number1"
+    - number: "256"
+  - list
+    - number: "3490570"
+    - number: "234"
+  - list
+    - number: "239420783"
+    - number: "23423840"
+*/
