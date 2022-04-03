@@ -6,7 +6,10 @@ use iced::{
 mod style;
 
 pub fn main() -> iced::Result {
-  App::run(Settings::default())
+  App::run(Settings {
+    antialiasing: true,
+    ..Settings::default()
+  })
 }
 
 #[derive(Default)]
@@ -16,6 +19,7 @@ struct App {
   input: text_input::State,
   input_value: String,
   button: button::State,
+  code_blocks: Vec<String>,
 }
 
 #[derive(Debug, Clone)]
@@ -39,12 +43,13 @@ impl Sandbox for App {
   fn update(&mut self, message: Message) {
     match message {
       Message::ThemeChanged(theme) => self.theme = theme,
-      Message::InputChanged(value) => {
-        println!("{}->{}", self.input_value, value);
+      Message::InputChanged(value) => self.input_value = value,
 
-        self.input_value = value;
+      Message::ButtonPressed if !self.input_value.is_empty() => {
+        self.code_blocks.push(self.input_value.clone());
+        self.input_value.clear();
       }
-      Message::ButtonPressed => println!("Add: {}", self.input_value),
+      Message::ButtonPressed => {}
     }
   }
 
@@ -79,17 +84,21 @@ impl Sandbox for App {
       .on_press(Message::ButtonPressed)
       .style(self.theme);
 
-    let content = Scrollable::new(&mut self.scroll)
+    let sidebar = Scrollable::new(&mut self.scroll)
       .spacing(20)
       .padding(20)
       .style(self.theme)
       .push(choose_theme)
       .push(Row::new().spacing(10).push(text_input).push(button));
 
-    Container::new(content)
-      .width(Length::Fill)
-      .height(Length::Fill)
-      .style(self.theme)
-      .into()
+    let canvas = Row::new()
+      .padding(20)
+      .push(Text::new(format!("{:?}", self.code_blocks)));
+
+    let content = Row::new()
+      .push(canvas.width(Length::FillPortion(70)).height(Length::Fill))
+      .push(sidebar.width(Length::FillPortion(30)).height(Length::Fill));
+
+    Container::new(content).style(self.theme).into()
   }
 }
